@@ -3,6 +3,6 @@ package structs
 import "net/http"
 
 type Bait struct {
-	Request http.Request
-	MinLatency, MaxLatency float64
+    Request http.Request
+    MinLatency, MaxLatency float64
 }
