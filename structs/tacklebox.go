@@ -1,9 +1,13 @@
 package structs
 
-import "strings"
+import {
+    "net/http"
+    "strings"
+)
 
 type TackleBox struct {
+    Transport *http.Transport
     Url, Method string
-    MinLatency, MaxLatency float64
     RequestBodyHeader strings.Reader
+    MinLatency, MaxLatency string
 }

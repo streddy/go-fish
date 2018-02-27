@@ -1,8 +1,12 @@
 package structs
 
-import "net/http"
+import (
+    "net/http"
+    "time"
+)
 
 type Bait struct {
+    Transport *http.Transport
     Request http.Request
-    MinLatency, MaxLatency float64
+    Latency int64
 }
