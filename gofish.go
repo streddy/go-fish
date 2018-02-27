@@ -1,20 +1,38 @@
 package gofish
 
 import (
-    "fmt"
+    "github.com/streddy/go-fish/structs"
+
+    "math/rand"
     "net/http"
+    "fmt"
     "strings"
     "time"
 )
 
-func PrepareBait(request_info structs.TackleBox) *structs.Bait {
-    request, _ := http.NewRequest(request_info.Method, request_info.Url,
-                                  request_info.RequestBodyReader)
+func PrepareBait(requestInfo structs.TackleBox) *structs.Bait {
+    // construct request
+    request, _ := http.NewRequest(requestInfo.Method, requestInfo.Url,
+                                  requestInfo.RequestBodyReader)
+    
+    // determine a random latency for this request
+    minLat, _ := time.ParseDuration(requestInfo.MinLatency)
+    maxLat, _ := time.ParseDuration(requestInfo.MaxLatency)
+    timeInterval := rand.Int63n(time.Nanoseconds(maxLat) - 
+                                time.Nanoseconds(minLat)) 
+                    + time.Nanoseconds(minLat)
+
     bait := &structs.Bait{
-        Request:      request,
-        MinLatency:   request_info.MinLatency,
-        MaxLatency:   request_info.MaxLatency,
+        Transport:  requestInfo.Transport,
+        Request:    request,
+        Latency:    timeInterval,
     }
 
     return bait
 }
+
+func GoFish(request *structs.Bait) *http.Response {
+    time.sleep(*request.Latency)
+    httpResponse, err := *request.Transport.RoundTrip(*request.Request)
+    return httpResponse
+} 
