@@ -5,7 +5,7 @@ type Route struct {
 	Url						string
 	Method					string
 	Headers					string
-	RequestBody 			string
+	RequestBody				string
 	MandatoryDependencies	[]Route
 	LikelyDependencies		[]Route
 	Samples					int
