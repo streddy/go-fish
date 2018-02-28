@@ -46,7 +46,7 @@ func GoFish(trafficParams structs.TackleBox, responseChannels []chan *structs.Re
         // hit all of the route's dependencies
         for _, dependency := range route.MandatoryDependencies {
             requestInfo.Route = dependency
-			request := prepareBait(requestInfo)
+            request := prepareBait(requestInfo)
             castReel(request)
         }
         
