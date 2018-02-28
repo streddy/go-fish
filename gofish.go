@@ -16,10 +16,11 @@ func PrepareBait(requestInfo structs.TackleBox) *structs.Bait {
                                   requestInfo.RequestBodyReader)
     
     // determine a random latency for this request
+    random := rand.New(rand.NewSource(time.Now().UnixNano()))
     minLat, _ := time.ParseDuration(requestInfo.MinLatency)
     maxLat, _ := time.ParseDuration(requestInfo.MaxLatency)
-    timeInterval := rand.Int63n(time.Nanoseconds(maxLat) - 
-                                time.Nanoseconds(minLat)) 
+    timeInterval := random.Int63n(time.Nanoseconds(maxLat) - 
+                                  time.Nanoseconds(minLat)) 
                     + time.Nanoseconds(minLat)
 
     bait := &structs.Bait{
@@ -35,4 +36,4 @@ func GoFish(request *structs.Bait) *http.Response {
     time.sleep(*request.Latency)
     httpResponse, err := *request.Transport.RoundTrip(*request.Request)
     return httpResponse
-} 
+}
