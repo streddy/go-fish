@@ -85,9 +85,9 @@ func prepareBait(requestInfo structs.BaitBox) *structs.Bait {
     headerPairs := strings.Split(route.Headers, "\n")
     for i := range headerPairs {
         split := strings.SplitN(headerPairs[i], ":", 2)
-	if len(split) == 2 {
-	    request.Header.Set(split[0], split[1])
-	}
+	    if len(split) == 2 {
+	        request.Header.Set(split[0], split[1])
+	    }
     }
     request.Header.Set("go_time", time.Now().String())
 
