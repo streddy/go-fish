@@ -85,9 +85,9 @@ func prepareBait(requestInfo structs.BaitBox) *structs.Bait {
     headerPairs := strings.Split(route.Headers, "\n")
     for i := range headerPairs {
         split := strings.SplitN(headerPairs[i], ":", 2)
-		if len(split) == 2 {
-			request.Header.Set(split[0], split[1])
-		}
+        if len(split) == 2 {
+            request.Header.Set(split[0], split[1])
+        }
     }
     request.Header.Set("go_time", time.Now().String())
 
@@ -116,20 +116,20 @@ func castReel(request *structs.Bait) *structs.Response {
 func reelIn(httpResponse *http.Response, err bool) *structs.Response {
     response := &structs.Response{}
     
-	if err {
-		response.Error = true
-	} else {
-		if httpResponse.ContentLength < 0 { // -1 if the length is unknown
-			content, err := ioutil.ReadAll(httpResponse.Body)
-			if err == nil {
-				response.Size = int64(len(content))
-			}
-		} else {
-			response.Size = httpResponse.ContentLength
-		}
-		response.StatusCode = httpResponse.StatusCode
-		defer httpResponse.Body.Close()
-	}
+    if err {
+        response.Error = true
+    } else {
+        if httpResponse.ContentLength < 0 { // -1 if the length is unknown
+            content, err := ioutil.ReadAll(httpResponse.Body)
+            if err == nil {
+                response.Size = int64(len(content))
+            }
+        } else {
+            response.Size = httpResponse.ContentLength
+        }
+        response.StatusCode = httpResponse.StatusCode
+        defer httpResponse.Body.Close()
+    }
 
-	return response
+    return response
 }

@@ -1,6 +1,6 @@
 package structs
 
-import {
+import (
     "net/http"
     "strings"
 )
