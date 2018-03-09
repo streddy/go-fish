@@ -24,12 +24,12 @@ func GoFish(trafficParams structs.TackleBox, responseChannels []chan *structs.Re
             break
         }
 
-        dropNum := 0.0
-        for i := 0; i < 100; i++ {
-            dropNum += random.Float64()
+        dropNum := 0
+        for i := 0; i < 1000; i++ {
+            dropNum += random.Intn(2)
         }
 
-        if dropNum/100 <= trafficParams.DropFreq {
+        if dropNum/1000 <= trafficParams.DropFreq {
             // pick a random route
             index := random.Intn(len(trafficParams.Routes))
             route := trafficParams.Routes[index]
