@@ -24,12 +24,9 @@ func GoFish(trafficParams structs.TackleBox, responseChannels []chan *structs.Re
             break
         }
 
-        dropNum := 0
-        for i := 0; i < 1000; i++ {
-            dropNum += random.Intn(2)
-        }
-
-        if dropNum/1000 <= trafficParams.DropFreq {
+        // simulate packet drop
+        dropPacket := determineDrop(trafficParams.DropFreq, random)
+        if dropPacket {
             // pick a random route
             index := random.Intn(len(trafficParams.Routes))
             route := trafficParams.Routes[index]
@@ -66,6 +63,17 @@ func GoFish(trafficParams structs.TackleBox, responseChannels []chan *structs.Re
 
 // HELPER FUNCTIONS
 
+// Determine whether a packet should be dropped
+func determineDrop(dropFreq float64, random *Rand) bool {
+    dropNum := 0
+    // generate a random value between 0 and 1000
+    for i := 0; i < 1000; i++ {
+        dropNum += random.Intn(2)
+    }
+    
+    return dropNum/1000 <= dropFreq
+}
+
 // Prepares a Bait struct that will be used in sending the request
 func prepareBait(requestInfo structs.BaitBox) *structs.Bait {
     // construct request
@@ -100,7 +108,7 @@ func prepareBait(requestInfo structs.BaitBox) *structs.Bait {
     return bait
 }
 
-// Sends a request and introduces traffic conditions
+// Sends a request and introduces traffic latency
 func castReel(request *structs.Bait) *structs.Response {
     // introduce latency
     time.sleep(*request.Latency)
