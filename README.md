@@ -1,4 +1,5 @@
-# GoFish
+![](logos/gofish_text.png "go-fish")
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/streddy/go-fish)](https://goreportcard.com/report/github.com/streddy/go-fish)
 
 GoFish is a traffic-shaping library that allows users to introduce artifical
