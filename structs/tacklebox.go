@@ -12,5 +12,6 @@ type TackleBox struct {
 	Routes     []Route
 	MinLatency string
 	MaxLatency string
-	DropFreq   float64
+    DropFreq   float64
+    UseTrans   bool
 }

@@ -15,6 +15,8 @@ utility (not the fish).
 
 * - [ ] Add usage to README
 * - [ ] Look into providing tools for shaping patterns fluidly over time
+    * - [ ] Binary on/off for routes over time periods
+* - [ ] Allow sending requests via roundtrip to GET
 * - [ ] Add response delay (and drop?)
 * - [ ] TLS
     * - [ ] Port https stuff over from go2wrk

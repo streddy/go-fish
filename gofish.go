@@ -11,16 +11,15 @@ import (
 	"time"
 )
 
-// GoFish hits routes and their dependencies in a random order under specified traffic conditions
-func GoFish(trafficParams structs.TackleBox, responseChannels []chan *structs.Response,
-	doneChannel chan bool) {
+// Freestyle hits routes and their dependencies in a random order under specified drops/latencies
+func Freestyle(trafficParams structs.TackleBox, responseChannels []chan *structs.Response, done *bool) {
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	// Send a request every 1/Frequency seconds (at fastest)
 	ticker := time.NewTicker(time.Second / time.Duration(trafficParams.Frequency))
 	for range ticker.C {
 		// if caller has decided to stop sending traffic, break
-		if len(doneChannel) == 1 {
+		if done {
 			break
 		}
 
@@ -39,7 +38,13 @@ func GoFish(trafficParams structs.TackleBox, responseChannels []chan *structs.Re
 				MaxLatency: trafficParams.MaxLatency,
 			}
 
-			// prepare request-specific fields
+            // prepare request-specific fields
+            // dependent on whether we are using Transport
+            if trafficParams.UseTrans {
+                request := prepareBaitTransport(requestInfo)
+            } else {
+
+            }
 			request := prepareBait(requestInfo)
 
 			// send request
@@ -61,6 +66,48 @@ func GoFish(trafficParams structs.TackleBox, responseChannels []chan *structs.Re
 	}
 }
 
+// Warmup is used to warmup a cache on a specific route. It does not handle responses
+func Warmup(trafficParams structs.TackleBox, done *bool) {
+	// Create request
+	route := trafficParams.Routes[0]
+	requestBodyReader := strings.NewReader(route.RequestBody)
+	request, _ := http.NewRequest(route.Method, route.Url, requestBodyReader)
+	
+	// Create requests for route's dependencies
+	var dependencyList []*http.Request
+	for i, dependency := range route.MandatoryDependencies {
+		depReqBodyReader := strings.NewReader(dependency.RequestBody)	
+		depReq, _ := http.NewRequest(dependency.Method, dependency.Url, depReqBodyReader)
+		dependencyList[i] := depReq
+	}
+
+	// Send a request every 1/Frequency seconds (at fastest)
+	ticker := time.NewTicker(time.Second / time.Duration(tps.Frequency))
+	for range ticker.C {
+		// If caller has decided to stop sending traffic, break
+		if done {
+			break
+		}
+
+		httpResponse, err := trafficParams.Transport.RoundTrip(request)
+
+		// hit all the described dependencies in routes.json
+		for _, depReq := range dependencyList {
+			httpResponse, err := trafficParams.Transport.RoundTrip(depReq)
+		}
+	}
+}
+
+// OneFish sends a single request and ignores the response. Useful for calibrating timers
+func OneFish(trafficParams structs.TackleBox) {
+	route := trafficParams.Routes[0]
+	requestBodyReader := strings.NewReader(route.RequestBody)
+	request, _ := http.NewRequest(route.Method, route.Url, requestBodyReader)
+	request.Header.set(route.Headers)
+
+	transport.RoundTrip(request)
+}
+
 // HELPER FUNCTIONS
 
 // Determine whether a packet should be dropped
@@ -74,7 +121,7 @@ func determineDrop(dropFreq float64, random *Rand) bool {
 	return dropNum/1000 <= dropFreq
 }
 
-// Prepares a Bait struct that will be used in sending the request
+// Prepares a Bait struct that will be used in sending the request as a Transport object
 func prepareBait(requestInfo structs.BaitBox) *structs.Bait {
 	// construct request
 	route = requestInfo.Route
@@ -97,7 +144,6 @@ func prepareBait(requestInfo structs.BaitBox) *structs.Bait {
 			request.Header.Set(split[0], split[1])
 		}
 	}
-	request.Header.Set("go_time", time.Now().String())
 
 	bait := &structs.Bait{
 		Transport: requestInfo.Transport,
