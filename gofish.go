@@ -123,10 +123,18 @@ func prepareBait(requestInfo structs.BaitBox) *structs.Bait {
 	request, _ := http.NewRequest(route.Method, route.Url, requestBodyReader)
 
 	// determine a random latency for this request
-	random := rand.New(rand.NewSource(time.Now().UnixNano()))
+	var timeInterval int64
 	minLat, _ := time.ParseDuration(requestInfo.MinLatency)
 	maxLat, _ := time.ParseDuration(requestInfo.MaxLatency)
-	timeInterval := random.Int63n(int64(maxLat) - int64(minLat)) + int64(minLat)
+
+	if int64(minLat) < int64(maxLat) {
+		random := rand.New(rand.NewSource(time.Now().UnixNano()))
+		timeInterval = random.Int63n(int64(maxLat) - int64(minLat)) + int64(minLat)
+	} else if int64(minLat) == int64(maxLat) {
+		timeInterval = int64(minLat)
+	} else {
+		timeInterval = 0
+	}
 
 	// split incoming header string by \n and build header pairs
 	headerPairs := strings.Split(route.Headers, "\n")
