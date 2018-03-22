@@ -2,7 +2,6 @@ package structs
 
 import (
 	"net/http"
-	"strings"
 )
 
 // TackleBox is a struct that contains the initial traffic information

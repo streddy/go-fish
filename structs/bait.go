@@ -2,7 +2,6 @@ package structs
 
 import (
 	"net/http"
-	"time"
 )
 
 // Bait is a struct containing a request and its traffic behavior

@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -19,7 +19,7 @@ func Freestyle(trafficParams structs.TackleBox, responseChannels []chan *structs
 	ticker := time.NewTicker(time.Second / time.Duration(trafficParams.Frequency))
 	for range ticker.C {
 		// if caller has decided to stop sending traffic, break
-		if done {
+		if *done {
 			break
 		}
 
@@ -39,12 +39,6 @@ func Freestyle(trafficParams structs.TackleBox, responseChannels []chan *structs
 			}
 
             // prepare request-specific fields
-            // dependent on whether we are using Transport
-            if trafficParams.UseTrans {
-                request := prepareBaitTransport(requestInfo)
-            } else {
-
-            }
 			request := prepareBait(requestInfo)
 
 			// send request
@@ -78,22 +72,22 @@ func Warmup(trafficParams structs.TackleBox, done *bool) {
 	for i, dependency := range route.MandatoryDependencies {
 		depReqBodyReader := strings.NewReader(dependency.RequestBody)	
 		depReq, _ := http.NewRequest(dependency.Method, dependency.Url, depReqBodyReader)
-		dependencyList[i] := depReq
+		dependencyList[i] = depReq
 	}
 
 	// Send a request every 1/Frequency seconds (at fastest)
-	ticker := time.NewTicker(time.Second / time.Duration(tps.Frequency))
+	ticker := time.NewTicker(time.Second / time.Duration(trafficParams.Frequency))
 	for range ticker.C {
 		// If caller has decided to stop sending traffic, break
-		if done {
+		if *done {
 			break
 		}
 
-		httpResponse, err := trafficParams.Transport.RoundTrip(request)
+		trafficParams.Transport.RoundTrip(request)
 
 		// hit all the described dependencies in routes.json
 		for _, depReq := range dependencyList {
-			httpResponse, err := trafficParams.Transport.RoundTrip(depReq)
+			trafficParams.Transport.RoundTrip(depReq)
 		}
 	}
 }
@@ -103,28 +97,28 @@ func OneFish(trafficParams structs.TackleBox) {
 	route := trafficParams.Routes[0]
 	requestBodyReader := strings.NewReader(route.RequestBody)
 	request, _ := http.NewRequest(route.Method, route.Url, requestBodyReader)
-	request.Header.set(route.Headers)
+	request.Header.Set(route.Headers, strconv.FormatInt(time.Now().UnixNano()/1000, 10))
 
-	transport.RoundTrip(request)
+	trafficParams.Transport.RoundTrip(request)
 }
 
 // HELPER FUNCTIONS
 
 // Determine whether a packet should be dropped
-func determineDrop(dropFreq float64, random *Rand) bool {
+func determineDrop(dropFreq float64, random *rand.Rand) bool {
 	dropNum := 0
 	// generate a random value between 0 and 1000
 	for i := 0; i < 1000; i++ {
 		dropNum += random.Intn(2)
 	}
 
-	return dropNum/1000 <= dropFreq
+	return float64(dropNum/1000) <= dropFreq
 }
 
 // Prepares a Bait struct that will be used in sending the request as a Transport object
 func prepareBait(requestInfo structs.BaitBox) *structs.Bait {
 	// construct request
-	route = requestInfo.Route
+	route := requestInfo.Route
 	requestBodyReader := strings.NewReader(route.RequestBody)
 	request, _ := http.NewRequest(route.Method, route.Url, requestBodyReader)
 
@@ -132,9 +126,7 @@ func prepareBait(requestInfo structs.BaitBox) *structs.Bait {
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	minLat, _ := time.ParseDuration(requestInfo.MinLatency)
 	maxLat, _ := time.ParseDuration(requestInfo.MaxLatency)
-	timeInterval := random.Int63n(time.Nanoseconds(maxLat) -
-		time.Nanoseconds(minLat))
-	+time.Nanoseconds(minLat)
+	timeInterval := random.Int63n(int64(maxLat) - int64(minLat)) + int64(minLat)
 
 	// split incoming header string by \n and build header pairs
 	headerPairs := strings.Split(route.Headers, "\n")
@@ -157,10 +149,10 @@ func prepareBait(requestInfo structs.BaitBox) *structs.Bait {
 // Sends a request and introduces traffic latency
 func castReel(request *structs.Bait) *structs.Response {
 	// introduce latency
-	time.sleep(*request.Latency)
+	time.Sleep(time.Duration(request.Latency))
 
 	// send request and handle response
-	httpResponse, err := *request.Transport.RoundTrip(*request.Request)
+	httpResponse, err := request.Transport.RoundTrip(request.Request)
 	response := reelIn(httpResponse, err != nil)
 
 	return response
