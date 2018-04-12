@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	//"fmt"
 )
 
 // Freestyle hits routes and their dependencies in a random order under specified drops/latencies
@@ -25,7 +26,7 @@ func Freestyle(trafficParams structs.TackleBox, responseChannels []chan *structs
 
 		// simulate packet drop
 		dropPacket := determineDrop(trafficParams.DropFreq, random)
-		if dropPacket {
+		if !dropPacket {
 			// pick a random route
 			index := random.Intn(len(trafficParams.Routes))
 			route := trafficParams.Routes[index]
@@ -104,6 +105,7 @@ func OneFish(trafficParams structs.TackleBox) {
 
 // HELPER FUNCTIONS
 
+// TODO: THIS NEEDS TO CHANGE. PRETTY MUCH ALWAYS 50/50 RIGHT NOW
 // Determine whether a packet should be dropped
 func determineDrop(dropFreq float64, random *rand.Rand) bool {
 	dropNum := 0
@@ -112,7 +114,10 @@ func determineDrop(dropFreq float64, random *rand.Rand) bool {
 		dropNum += random.Intn(2)
 	}
 
-	return float64(dropNum/1000) <= dropFreq
+	//fmt.Printf("%d\n", dropNum)
+	//fmt.Printf("%f\n", float64(dropNum)/1000)
+	//fmt.Printf("%t\n", float64(dropNum/1000) <= dropFreq)
+	return float64(dropNum)/1000 <= dropFreq
 }
 
 // Prepares a Bait struct that will be used in sending the request as a Transport object
